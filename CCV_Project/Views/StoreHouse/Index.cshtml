@@ -1,0 +1,54 @@
+﻿@model IEnumerable<CCV_Project.Models.StoreHouse>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+@if (Session["UserID"] != null)
+{
+    <h4>
+        Welcome @Session["FirstName"].ToString()
+    </h4>
+}
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.StoreHouseName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.storeHouseType)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.StoreHouseActiv)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.StoreHouseName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.storeHouseType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StoreHouseActiv)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.StoreHouseId }) |
+                @Html.ActionLink("Details", "Details", new { id = item.StoreHouseId }) |
+                @Html.ActionLink("Delete", "Delete", new { id = item.StoreHouseId }) |
+                @Html.ActionLink("More", "More", new { id = item.StoreHouseId })
+            </td>
+        </tr>
+    }
+
+</table>
