@@ -51,6 +51,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="LumenWorks.Framework.IO, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5ad3ea2f85776344, processorArchitecture=MSIL">
+      <HintPath>..\packages\LumenWorksCsvReader.4.0.0\lib\net461\LumenWorks.Framework.IO.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
@@ -144,8 +147,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Classes\StringToEnum.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\RackController.cs" />
+    <Compile Include="Controllers\SharedController.cs" />
+    <Compile Include="Controllers\ShelfController.cs" />
     <Compile Include="Controllers\StoreHouseController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -181,6 +187,21 @@
     <Content Include="Views\StoreHouse\Details.cshtml" />
     <Content Include="Views\Rack\Index.cshtml" />
     <Content Include="Views\Rack\NewRack.cshtml" />
+    <Content Include="Views\Rack\Details.cshtml" />
+    <Content Include="Views\Rack\Edit.cshtml" />
+    <Content Include="Views\Shelf\Index.cshtml" />
+    <Content Include="Views\Shelf\NewShelf.cshtml" />
+    <Content Include="Views\Shelf\Edit.cshtml" />
+    <Content Include="Views\Shelf\Details.cshtml" />
+    <Content Include="Views\Shared\Buttons\SingOut.cshtml" />
+    <Content Include="Views\Shared\Buttons\Create.cshtml" />
+    <Content Include="Views\Shared\AlreadyExist.cshtml" />
+    <Content Include="Views\StoreHouse\Import.cshtml" />
+    <Content Include="Views\Rack\Import.cshtml" />
+    <Content Include="Views\Shelf\Import.cshtml" />
+    <Content Include="Views\Shared\Other\StoreHouseName.cshtml" />
+    <Content Include="Views\Shared\Other\StoreHouse_Rack.cshtml" />
+    <Content Include="Views\Shared\Other\StoreHouse_Rack_Shelf.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

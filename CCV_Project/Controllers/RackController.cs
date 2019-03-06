@@ -1,38 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using CCV_Project.Classes;
 using CCV_Project.Models;
+using LumenWorks.Framework.IO.Csv;
+using static System.Net.HttpStatusCode;
 
 namespace CCV_Project.Controllers
 {
+    public class RackModel
+    {
+        public List<Rack> Racks { get; set; }
+        public int StoreHouseId { get; set; }
+    }
+
     public class RackController : Controller
     {
-        //private int StoreHouseID = ViewDataInfo;
-        // GET: Rack
-
-
-        //Ehm čau Paťo, potreboval by som poradiť ... ak sa dívaš na tento kod asi si sa rozhodol že mi poradíš takže tu je môj problém
-        //potrebujem dostať "Id" zo StoreHouseContorller sem do RackControler
-        public ActionResult Index(int id) // ---> tu sa mi to čiastočne podarilo a tak môžem vypísať Racks ktoré patria do StoreHouse na ktorý si klikol, konkrétne to robím cez redirect to action s parametrom
+        public ActionResult Index(int id)
         {
+            Session["StoreHouseID"] = id;
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
-                return View(db.Racks.ToList().Where(c=>c.StoreHouseRefId == id));
+                Session["StoreHouseName"] = db.StoreHouses.Where(c => c.StoreHouseId == id).Single().StoreHouseName;
+                List<Rack> racks = db.Racks.Where(c=>c.StoreHouseRefId == id).ToList();
+                var model = new RackModel(){Racks = racks,StoreHouseId = id};
+
+                return View(model);
             }
         }
-        //avšak, ked chcem vytvoriť nový rack ktorý patrí do daného StoreHouse (viz CCV_Tables - Foreign key) tak narážam na problém ako určiť aké ID má storeHouse v ktorom sa práve nachádzam
-        //skúšal som všeličo ... najlepšie asi fungovali TempData ale ked refreshnem stránku alebo nejdem priamo zo storeHouse, robí to kktiny
-        //napadlo ma riešiť to tak že si budem ID ukladať do databázy a budem si ho udržiavať po celý čas čo budem v danom StoreHouse ale príde mi to príliš komplikované, určite existuje niečo jednoduchšie...
-        //ak ťa niečo napadlo daj vedieť ... kludne to dopíš do kodu a pushni späť ...inak asi si si všimol že používam všade using (CCV_Tables_Context db = new CCV_Tables_Context())
-        //popravde newm či je to dobre takto alebo mi stačí spraviť niečo ako private CCV_Tables_Context _db = new CCV_Tables_Context() hned na začiatku kodu a požívať všade len _db
-        //daj vedieť čo je lepšie ... príde mi že kým sa aplikácia spustí trvá to celú večnosť ...
-        // toť asi vše .. teda aspoň k tomuto projektu ... žiadny indický c# youtuber ani stackoverflow nepomohli tak snád budeš vedieť ty ... :D
 
         public ActionResult NewRack()
         {
-            return View();  
+            return View();
         }
 
         [HttpPost]
@@ -42,10 +46,20 @@ namespace CCV_Project.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    db.Racks.Add(rack);
-                    db.SaveChanges();
+                    bool isAlreadyRegistered = db.Racks.Any(c => c.Xposition == rack.Xposition)&& db.Racks.Any(c => c.Yposition == rack.Yposition) && db.Racks.Any(c => c.StoreHouseRefId == rack.StoreHouseRefId);
+                    if (!isAlreadyRegistered)
+                    {
+                        rack.StoreHouseRefId = (int)HttpContext.Session["StoreHouseID"];
+                        db.Racks.Add(rack);
+                        db.SaveChanges();
+                        ModelState.Clear();
+                        return RedirectToAction("Index", new { iD = Session["StoreHouseID"] });
+                    }
+                    else
+                    {
+                        TempData["AlreadyExist"] = "You can not have two rack on the same position";
+                    }
                 }
-                ModelState.Clear();
                 return View();
             }
         }
@@ -53,6 +67,138 @@ namespace CCV_Project.Controllers
         public ActionResult Create()
         {
             return RedirectToAction("NewRack");
+        }
+
+        public ActionResult Edit(int? id)
+        {
+            using (CCV_Tables_Context db = new CCV_Tables_Context())
+            {
+                Session["RackName"] = db.Racks.Where(c => c.RackId == id).Single().Xposition + ":" + db.Racks.Where(c => c.RackId == id).Single().Yposition;
+                if (id == null)
+                {
+                    return new HttpStatusCodeResult(BadRequest);
+                }
+                Rack rack = db.Racks.Find(id);
+                if (rack == null)
+                {
+                    return HttpNotFound();
+                }
+
+                return View(db.Racks.SingleOrDefault(c => c.RackId == id));
+            }
+        }
+
+        [HttpPost]
+        public ActionResult Edit(Rack rack)
+        {
+            using (CCV_Tables_Context db = new CCV_Tables_Context())
+            {
+                if (ModelState.IsValid)
+                {
+                    rack.StoreHouseRefId = (int)HttpContext.Session["StoreHouseID"];
+                    db.Entry(rack).State = EntityState.Modified;
+                    db.SaveChanges();
+                    return RedirectToAction("Index", new{iD = Session["StoreHouseID"]});
+                }
+
+                return View();
+            }
+        }
+
+        public ActionResult Details(int id)
+        {
+            using (CCV_Tables_Context db = new CCV_Tables_Context())
+            {
+                Session["RackName"] = db.Racks.Where(c => c.RackId == id).Single().Xposition + ":" + db.Racks.Where(c => c.RackId == id).Single().Yposition;
+                return View(db.Racks.SingleOrDefault(c => c.RackId == id));
+            }
+        }
+
+        public ActionResult Delete(int id)
+        {
+            using (CCV_Tables_Context db = new CCV_Tables_Context())
+            {
+                var rack = db.Racks.SingleOrDefault(c => c.RackId == id);
+                db.Racks.Remove(rack);
+                db.SaveChanges();
+                return RedirectToAction("Index",new {iD = Session["StoreHouseID"]});
+            }
+        }
+
+        public ActionResult More(int id)
+        {
+            using (CCV_Tables_Context db = new CCV_Tables_Context())
+            {
+                Session["RackName"] = db.Racks.Where(c => c.RackId == id).Single().Xposition + ":" + db.Racks.Where(c => c.RackId == id).Single().Yposition;
+                return RedirectToAction("Index", "Shelf", new { iD = id });
+            }
+        }
+
+        public ActionResult BackToStoreHouseIndex()
+        {
+            return RedirectToAction("Index", "StoreHouse");
+        }
+
+        public ActionResult SingOut()
+        {
+            Session["IsAdmin"] = false;
+            return RedirectToAction("SingOut", "Shared");
+        }
+
+        public ActionResult Import()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Import(HttpPostedFileBase upload)
+        {
+            if (ModelState.IsValid)
+            {
+                if (upload != null && upload.ContentLength > 0)
+                {
+                    if (upload.FileName.EndsWith(".csv"))
+                    {
+                        Stream stream = upload.InputStream;
+                        DataTable csvTable = new DataTable();
+                        using (CsvReader csvReader =
+                            new CsvReader(new StreamReader(stream), true))
+                        {
+                            csvTable.Load(csvReader);
+                        }
+
+                        using (CCV_Tables_Context db = new CCV_Tables_Context())
+                        {
+                            string[] words;
+                            for (int i = 0; i < csvTable.Rows.Count; i++)
+                            {
+                                csvTable.Rows[i].ItemArray[0].ToString();
+                                words = csvTable.Rows[i].ItemArray[0].ToString().Split(';');
+                                Rack rack = new Rack();
+                                rack.EAN = Int32.Parse(words[0]);
+                                rack.Xposition = Int32.Parse(words[1]);
+                                rack.Yposition = Int32.Parse(words[2]);
+                                rack.Activ = Boolean.Parse(words[3]);
+                                rack.StoreHouseRefId = (int)Session["StoreHouseID"];
+                                db.Racks.Add(rack);
+                                db.SaveChanges();
+                            }
+                        }
+                        return View(csvTable);
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("File", "This file format is not supported");
+                        return View();
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError("File", "Please Upload Your file");
+                }
+            }
+            return View();
         }
     }
 }

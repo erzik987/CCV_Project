@@ -33,12 +33,23 @@ namespace CCV_Project.Controllers
             {
                 using (CCV_Tables_Context db = new CCV_Tables_Context())
                 {
-                    db.UserAcounts.Add(account);
-                    db.SaveChanges();
-                }
 
-                ModelState.Clear();
-                ViewBag.Message = account.LastName + " " + account.FirstName + " succesfully registered";
+                    bool isAlreadyRegistered = db.UserAcounts.Any(c => c.Password == account.Password)&&db.UserAcounts.Any(c=>c.Username == account.Username);
+                    if (!isAlreadyRegistered)
+                    {
+                        db.UserAcounts.Add(account);
+                        db.SaveChanges();
+                        ModelState.Clear();
+                        TempData["WelcomeUser"] = account.LastName + " " + account.FirstName + " successfully registered";
+                        return RedirectToAction("Login");
+                    }
+                    else
+                    {
+                        TempData["AlreadyExist"] = "Please change your password or username";
+                    }
+                    
+                }
+                ViewBag.Message = account.LastName + " " + account.FirstName + " successfully registered";
             }
 
             return View();
@@ -46,6 +57,7 @@ namespace CCV_Project.Controllers
 
         public ActionResult Login()
         {
+            Session["IsAdmin"] = false;
             return View();
         }
 
@@ -72,10 +84,14 @@ namespace CCV_Project.Controllers
                 var usr = db.UserAcounts.Single(u => u.Username == user.Username && u.Password == user.Password);
                 if (usr != null)
                 {
-
                     Session["UserID"] = usr.UserId.ToString();
-                    //Session["Username"] = usr.Username.ToString();
                     Session["FirstName"] = usr.FirstName.ToString();
+                    bool admin = (usr.UserId == 1);
+                    if (admin)
+                    {
+                        Session["IsAdmin"] = true;
+                        return RedirectToAction("Index");
+                    }
                     return RedirectToAction("LoggedIn");
                 }
                 else
@@ -91,9 +107,7 @@ namespace CCV_Project.Controllers
         {
             if (Session["UserID"] != null)
             {
-                //return View("~/Views/StoreHouse/Index.cshtml");
                 return RedirectToAction("Index", "StoreHouse", new { area = "" });
-
             }
             else
             {
@@ -108,7 +122,6 @@ namespace CCV_Project.Controllers
 
         public ActionResult Edit(int? id)
         {
-            // RegisterRoutes(RouteTable.Routes);
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
                 if (id == null)
@@ -120,8 +133,6 @@ namespace CCV_Project.Controllers
                 {
                     return HttpNotFound();
                 }
-                //ViewData["FirstName"] = db.userAccount
-
                 return View(db.UserAcounts.SingleOrDefault(c => c.UserId == id));
             }
         }
@@ -147,21 +158,24 @@ namespace CCV_Project.Controllers
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
                 return View(db.UserAcounts.SingleOrDefault(c => c.UserId == id));
-            }
-            
+            }  
         }
 
         public ActionResult Delete(int id)
         {
-
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
                  var emp = db.UserAcounts.SingleOrDefault(c => c.UserId == id);
                 db.UserAcounts.Remove(emp);
                 db.SaveChanges();
                 return RedirectToAction("Index");
-            }
-           
+            } 
+        }
+
+        public ActionResult SingOut()
+        {
+            Session["IsAdmin"] = false;
+            return RedirectToAction("SingOut", "Shared");
         }
     }
 }

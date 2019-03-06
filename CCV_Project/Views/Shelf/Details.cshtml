@@ -1,0 +1,57 @@
+﻿@model CCV_Project.Models.Shelf
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+@Html.Partial("Other/StoreHouse_Rack_Shelf")
+<div>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Rack.RackId)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Rack.RackId)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.EAN)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.EAN)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Xposition)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Xposition)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Yposition)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Yposition)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Activ)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Activ)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.ShelfId }, new { @class = "btn btn-outline-success" }) 
+    @Html.ActionLink("Back", "Index",new {iD = Session["RackID"]}, new { @class = "btn btn-outline-dark" })
+</p>

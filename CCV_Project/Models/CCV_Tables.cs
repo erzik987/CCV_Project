@@ -7,8 +7,6 @@ using System.Web;
 
 namespace CCV_Project.Models
 {
-    //public class CCV_Tables
-    //{
 
         public class UserAcount
         {
@@ -104,6 +102,4 @@ namespace CCV_Project.Models
             public int RackId { get; set; }
             public Rack Rack { get; set; }
         }
-
-    //}
 }

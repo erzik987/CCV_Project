@@ -1,0 +1,68 @@
+﻿@model CCV_Project.Controllers.ShelfModel
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Shelves</h2>
+
+@Html.Partial("Other/StoreHouse_Rack")
+
+<p>
+    @Html.Partial("Buttons/Create")
+    @Html.ActionLink("Import", "Import", null, new { @class = "btn btn-outline-dark" })
+    @Html.Partial("Buttons/SingOut")
+</p>
+
+<table class="table table-striped">
+    <tr>
+
+        <th>
+            @Html.DisplayNameFor(model => model.Shelves.First().EAN)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Shelves.First().Xposition)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Shelves.First().Yposition)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Shelves.First().Activ)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model.Shelves)
+    {
+        <tr>
+
+            <td>
+                @Html.DisplayFor(modelItem => item.EAN)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Xposition)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Yposition)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Activ)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.ShelfId }) |
+                @Html.ActionLink("Details", "Details", new { id = item.ShelfId }) |
+                @Html.ActionLink("Delete", "Delete", new { id = item.ShelfId })
+            </td>
+        </tr>
+    }
+
+</table>
+<hr />
+
+
+<div class="form-group">
+    <div class="col-md-offset-2 col-md-10">
+        @Html.ActionLink("Back", "BackToRackIndex", null, new { @class = "btn btn-primary", @style = "color:white" })
+    </div>
+</div>
+

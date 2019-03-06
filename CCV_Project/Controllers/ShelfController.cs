@@ -6,47 +6,64 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using CCV_Project.Classes;
 using CCV_Project.Models;
 using LumenWorks.Framework.IO.Csv;
 using static System.Net.HttpStatusCode;
 
+
 namespace CCV_Project.Controllers
 {
-    public class StoreHouseController : Controller
+
+    public class ShelfModel
     {
-        // GET: StoreHouse
-        public ActionResult Index()
+        public List<Shelf> Shelves { get; set; }
+        public int RackId { get; set; }
+    }
+
+    public class ShelfController : Controller
+    {
+        // GET: Shelf
+        public ActionResult Index(int id)
         {
+            Session["RackID"] = id;
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
-                return View(db.StoreHouses.ToList());
+                Session["RackName"] = db.Racks.Where(c => c.RackId == id).Single().Xposition + ":" + db.Racks.Where(c => c.RackId == id).Single().Yposition;
+                
+                List<Shelf> shelves = db.Shelves.Where(c => c.RackId == id).ToList();
+                var model = new ShelfModel() { Shelves = shelves, RackId = id };
+
+                return View(model);
             }
         }
 
-        public ActionResult NewStoreHouse()
+        public ActionResult NewShelf()
         {
+           
             return View();
         }
 
         [HttpPost]
-        public ActionResult NewStoreHouse(StoreHouse storeHouse)
+        public ActionResult NewShelf(Shelf shelf)
         {
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
-                bool isAlreadyRegistered = db.StoreHouses.Any(c => c.StoreHouseName == storeHouse.StoreHouseName);
                 if (ModelState.IsValid)
                 {
+                    bool isAlreadyRegistered = db.Shelves.Any(c => c.Xposition == shelf.Xposition) && 
+                                               db.Shelves.Any(c => c.Yposition == shelf.Yposition) && 
+                                               db.Shelves.Any(c => c.RackId == shelf.RackId);
                     if (!isAlreadyRegistered)
                     {
-                        db.StoreHouses.Add(storeHouse);
+                        shelf.RackId = (int)HttpContext.Session["RackID"];
+                        db.Shelves.Add(shelf);
                         db.SaveChanges();
                         ModelState.Clear();
-                        return RedirectToAction("Index");
+                        return RedirectToAction("Index", new { iD = Session["RackID"] });
                     }
                     else
                     {
-                        TempData["AlreadyExist"] = "There can not be two storehouses with same name";
+                        TempData["AlreadyExist"] = "You can not create two shelves on the same position";
                     }
                     
                 }
@@ -55,51 +72,53 @@ namespace CCV_Project.Controllers
             }
         }
 
+        public ActionResult Create()
+        {
+            return RedirectToAction("NewShelf");
+        }
+
         public ActionResult Edit(int? id)
         {
-
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
-                Session["StoreHouseName"] = db.StoreHouses.Where(c => c.StoreHouseId == id).Single().StoreHouseName;
+                Session["ShelfName"] = db.Shelves.Where(c => c.ShelfId == id).Single().Xposition + ":" + db.Shelves.Where(c => c.ShelfId == id).Single().Yposition;
                 if (id == null)
                 {
-                return new HttpStatusCodeResult(BadRequest);
+                    return new HttpStatusCodeResult(BadRequest);
                 }
-                StoreHouse account = db.StoreHouses.Find(id);
-                if (User == null)
+                Shelf shelf = db.Shelves.Find(id);
+                if (shelf == null)
                 {
                     return HttpNotFound();
                 }
-    
-                return View(db.StoreHouses.SingleOrDefault(c => c.StoreHouseId == id));
+
+                return View(db.Shelves.SingleOrDefault(c => c.ShelfId == id));
             }
-            
         }
 
         [HttpPost]
-        public ActionResult Edit(StoreHouse storeHouse)
+        public ActionResult Edit(Shelf shelf)
         {
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
-
                 if (ModelState.IsValid)
                 {
-                    db.Entry(storeHouse).State = EntityState.Modified;
+                    shelf.RackId = (int)HttpContext.Session["RackID"];
+                    db.Entry(shelf).State = EntityState.Modified;
                     db.SaveChanges();
-                    return RedirectToAction("Index");
+                    return RedirectToAction("Index", new { iD = Session["RackID"] });
                 }
 
                 return View();
             }
         }
 
-
         public ActionResult Details(int id)
         {
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
-                Session["StoreHouseName"] = db.StoreHouses.Where(c => c.StoreHouseId == id).Single().StoreHouseName;
-                return View(db.StoreHouses.SingleOrDefault(c => c.StoreHouseId == id));
+                Session["ShelfName"] = db.Shelves.Where(c => c.ShelfId == id).Single().Xposition + ":" + db.Shelves.Where(c => c.ShelfId == id).Single().Yposition;
+                return View(db.Shelves.SingleOrDefault(c => c.ShelfId == id));
             }
         }
 
@@ -107,35 +126,21 @@ namespace CCV_Project.Controllers
         {
             using (CCV_Tables_Context db = new CCV_Tables_Context())
             {
-                var stHouse = db.StoreHouses.SingleOrDefault(c => c.StoreHouseId == id);
-                db.StoreHouses.Remove(stHouse);
+                var shelf = db.Shelves.SingleOrDefault(c => c.ShelfId == id);
+                db.Shelves.Remove(shelf);
                 db.SaveChanges();
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { iD = Session["RackID"] });
             }
         }
 
-        public ActionResult Create()
+        public ActionResult BackToRackIndex()
         {
-            return RedirectToAction("NewStoreHouse");
-        }
-
-        public ActionResult More(int id)
-        {
-            using (CCV_Tables_Context db = new CCV_Tables_Context())
-            {
-                Session["StoreHouseName"] = db.StoreHouses.Where(c => c.StoreHouseId == id).Single().StoreHouseName;
-                //TempData["SHId"] = id; 
-                return RedirectToAction("Index", "Rack", new { iD = id });
-            }
-        }
-
-        public ActionResult Back()
-        {
-            return RedirectToAction("Index", "Account");
+            return RedirectToAction("Index", "Rack", new {iD = Session["StoreHouseID"]});
         }
 
         public ActionResult SingOut()
         {
+            Session["IsAdmin"] = false;
             return RedirectToAction("SingOut", "Shared");
         }
 
@@ -169,12 +174,13 @@ namespace CCV_Project.Controllers
                             {
                                 csvTable.Rows[i].ItemArray[0].ToString();
                                 words = csvTable.Rows[i].ItemArray[0].ToString().Split(';');
-                                StoreHouse storeHouse = new StoreHouse();
-                                storeHouse.StoreHouseName = words[0];
-                                StringToEnum myIntToEnum = new StringToEnum();
-                                storeHouse.storeHouseType = myIntToEnum.GetStoreHouseTypeFromString(words[1]);
-                                storeHouse.StoreHouseActiv = Boolean.Parse(words[2]);
-                                db.StoreHouses.Add(storeHouse);
+                                Shelf shelf = new Shelf();
+                                shelf.EAN = Int32.Parse(words[0]);
+                                shelf.Xposition = Int32.Parse(words[1]);
+                                shelf.Yposition = Int32.Parse(words[2]);
+                                shelf.Activ = Boolean.Parse(words[3]);
+                                shelf.RackId = (int)Session["RackID"];
+                                db.Shelves.Add(shelf);
                                 db.SaveChanges();
                             }
                         }

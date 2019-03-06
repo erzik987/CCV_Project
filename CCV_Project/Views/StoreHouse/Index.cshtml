@@ -1,10 +1,10 @@
 ﻿@model IEnumerable<CCV_Project.Models.StoreHouse>
-
 @{
     ViewBag.Title = "Index";
 }
 
-<h2>Index</h2>
+<h2>Storehouses</h2>
+
 
 @if (Session["UserID"] != null)
 {
@@ -13,10 +13,16 @@
     </h4>
 }
 
+    @*<div>
+        @Html.DisplayNameFor(model => model.StoreHouseName)
+    </div>*@
+
 <p>
-    @Html.ActionLink("Create New", "Create")
-</p>
-<table class="table">
+        @Html.Partial("Buttons/Create")
+        @Html.ActionLink("Import", "Import", null, new { @class = "btn btn-outline-dark" })
+        @Html.Partial("Buttons/SingOut")
+    </p>
+<table class="table table-striped">
     <tr>
         <th>
             @Html.DisplayNameFor(model => model.StoreHouseName)
@@ -52,3 +58,14 @@
     }
 
 </table>
+
+@if (Session["IsAdmin"] == null)
+{
+    @Html.Partial("Buttons/SingOut")
+}
+else if ((bool)Session["IsAdmin"])
+{
+    @Html.ActionLink("Back", "Back", null, new { @class = "btn btn-outline-dark" })
+}
+
+
